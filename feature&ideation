@@ -1,0 +1,40 @@
+TARGET:
+ Psychological assistance to people (precise communication with human-like chatbot with different personalties)
+
+
+Features list:
+(making sure all features are scalable and solves real like problems)
+1. ai prompt box
+2. multiple human-like chatbots with different personalities
+3. customizable charbot
+4. Communities of people with same selected chatbots
+5. Psychological tests (text test, photographic tests and videographic tests)
+6. Camera usage during test to detect facial reaction during test 
+7. Creating reports at the end of every test with recommendations and distractions to help cure the patient
+8. Detailed graphical analysis of the report 
+9. In further scalability adding volunteers to help the people deal with their psychological issue
+10. Option to talk to both AI and human
+11. Helping you find right distraction according to your likes and dislikes
+
+
+Key Features of the App/Web Platform:
+• Psychological Communities of people wanting to talk with the same personality chatbot
+• 24/7 Psychological assistant facility
+• Psychological tests in different formats with video analysis of facial reactionse
+• Customizable and Personalization : User profiles created at login - tracking age gender interests etc. AI driven customizable chatbot
+• Detailed report of tests with recommendations and distractions.
+
+
+Implementation strategy
+• Stakeholder Collaboration: Involve government, education departments, hospitals, school teachers, NGOs and counselors for content and outreach.
+•Technology development: partnet with EdTech developers to build a scalable, lightweight app with offline features for poor internet areas.
+Full-scale rollout :  Roll out state-wide or nationally through government and private companies and organization
+Monitoring & Feedbac: Real-time analytics to track usage, app suggestions, successful transition to better psychological condition
+
+Expected solution
+We propose the developement of a mobile + web-based application that acts as a 24/7 available psychological assistant. The platform will be designed to help people in the betterment of their psychological state. It lets people talk their feelings out which them feel better and also gives them suggestions to help them improve their mental health.
+
+Impact
+• Improved psychological health inside the organizations which are using this tool.
+• Getting a like minded community of people who suffer from similar things.
+• Better work output from workers or students because of better psychological state

@@ -1,0 +1,35 @@
+One-Step Career Personalization 
+
+
+Stage 1: Ideation and Research.
+"Brainstorming and Validation"
+- research on unique features and unique msp of our project which makes our project stand
+ out from the various available sites.
+- research on various tools and APIs we can use for our project
+- research on presentation techniques for ground zero presentation
+- make a list of delivarables. (includes concept of the project plus features list)
+
+
+Stage 2 : Planning
+- categorizing features into phases. differentiating features based on MSP and uniqueness of the project
+  making sure every feature stands out and gets the required attention for the project.
+- Deciding the tech stack needed and finalizing the tools to use.
+- final presentation preparation and rehearsing on how to pitch.
+
+Stage 3 : Prototyping(Ground zero will be ready)
+- creating a product with working features list and minimal backend data. 
+- creating a sample usage based on real audience(users)
+- creating working ai engines.
+- creating mini internship and real job projects on a few topics to showcase our product model.
+- making a clicakable and intereactive prototype which a third person can use and review on our
+ machine 
+
+Stage 4 : Testing and feedback
+
+Stage 5 : Tools and Expansion
+
+Stage 6 : Polishing and scaling
+
+Stage 7 : Deployment and maintainance.
+
+

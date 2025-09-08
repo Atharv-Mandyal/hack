@@ -1,0 +1,27 @@
+ideation : (keep redesigning as per features add on)
+TARGET AUDIENCE: 
+
+People with psychological disorder 
+
+app?/website?
+
+phases of prompting:
+-creation of entensive database.
+-every phase would use genAI model.
+
+1. Know your customer
+2. Detail analysis through tests etc
+3. recommendations(detailed)
+
+detailed phases:
+1. basic information of the patient
+2. know his/her condition through tests
+    A. texts test
+    B. Photographic test
+    C. Videographic test
+    D. Psychological games(optional)
+3. Choosing chatbots
+    -giving user their own chatbot based on the data user enters and integrating the chat with our own database.
+    -recommending activities hobbies and distractions (such as music, sports, travelling, routines etc)
+    -giving option to make your own chatbot with a customized personality if none of the given suits your satisfaction
+    

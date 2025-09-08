@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lenis + AOS Demo</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <section class="hero" data-aos="fade-up">
+    <h1>Smooth Scroll + AOS</h1>
+  </section>
+
+  <section class="content" data-aos="zoom-in">
+    <p>This section zooms in as you scroll.</p>
+  </section>
+
+  <section class="content" data-aos="fade-right" data-aos-duration="1200">
+    <p>This section fades in from the right.</p>
+  </section>
+
+  <section class="content" data-aos="flip-left" data-aos-delay="300">
+    <p>This section flips in with a delay.</p>
+  </section>
+
+  <script src="https://unpkg.com/lenis@1.0.36/bundled/lenis.min.js"></script>
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

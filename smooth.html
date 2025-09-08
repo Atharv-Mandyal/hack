@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lenis-like Smooth Scroll Demo</title>
+  <style>
+    
+    :root{--bg:#0f1724;--card:#071029;--accent:#7c3aed;--text:#e6eef8}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--text);background:linear-gradient(180deg,#071029 0%, #001021 100%);}
+
+    
+    .viewport{
+      position:fixed;inset:0;overflow:hidden;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    
+    .content{
+      position:absolute;left:0;top:0;width:100%;will-change:transform;
+    }
+
+    header{
+      position:sticky;top:0;z-index:40;padding:18px 24px;background:linear-gradient(180deg, rgba(7,16,41,0.6), rgba(7,16,41,0.2));backdrop-filter: blur(6px);
+      display:flex;align-items:center;gap:16px;justify-content:space-between;
+    }
+    .logo{font-weight:700;letter-spacing:0.6px}
+    nav a{color:var(--text);text-decoration:none;margin-left:16px;font-weight:600;opacity:0.9}
+
+    main{padding:60px 24px 120px}
+    section{
+      min-height:100vh;display:flex;align-items:center;justify-content:center;padding:48px;border-radius:16px;margin:20px 0;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+    }
+
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;width:100%;max-width:1200px}
+    .card{padding:22px;border-radius:12px;background:rgba(255,255,255,0.02);min-height:140px}
+
+    footer{padding:60px 24px;text-align:center;opacity:0.9}
+
+    
+    .anchor-target{position:relative;top:0}
+
+   
+    @media (max-width:700px){header{padding:12px}main{padding:48px 12px}section{padding:28px}}
+  </style>
+</head>
+<body>
+
+  <div class="viewport" id="viewport">
+    <div class="content" id="content">
+
+      <header>
+        <div class="logo">PsychoRescue</div>
+        <nav>
+          <a href="#hero" data-anchor>Home</a>
+          <a href="#features" data-anchor>Features</a>
+          <a href="#cards" data-anchor>Cards</a>
+          <a href="#contact" data-anchor>Contact</a>
+        </nav>
+      </header>
+
+      <main>
+        <section id="hero">
+          <div style="max-width:1000px;text-align:center">
+            <h1 style="font-size:clamp(28px,5vw,52px);margin:0 0 8px">Psychological site demo landing page</h1>
+            <p style="opacity:0.85;font-size:clamp(14px,1.6vw,18px);margin:0 0 14px">A small, dependency free implementation of smooth scrolling with easing, anchors and touch support.</p>
+          </div>
+        </section>
+
+        <section id="features">
+          <div style="max-width:1000px">
+            <h2>Features</h2>
+            <ul>
+              <li>Psychological test</li>
+              <li>Video analysis of your test</li>
+              <li>Instant report</li>
+              <li>Cure and recommendations to improve condition</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="cards">
+          <div style="width:100%;max-width:1200px">
+            <h2 style="margin-bottom:18px">Tests</h2>
+            <div class="cards">
+              <div class="card">Textual test- It is done in a mcq format where you have to select the most suited answer according to you</div>
+              <div class="card">Photographic test- It is done using Roarsch InkBlott images where you have to input 1st thing you see</div>
+              <div class="card">Videographic test- It is done by showing you a video and asking question over it</div>
+              <div class="card">Games- few kinds of Psychological games available</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="contact">
+          <div style="max-width:800px;text-align:center">
+            <h2>Contact</h2>
+            <p style="margin-bottom:18px">This demo keeps the document in normal flow so SEO and anchor offsets remain correct. The translation is purely visual.</p>
+            <form style="display:flex;flex-direction:column;gap:8px;align-items:center">
+              <input placeholder="Your name" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);width:100%;max-width:420px;background:transparent;color:var(--text)" />
+              <textarea placeholder="Message" rows="4" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);width:100%;max-width:420px;background:transparent;color:var(--text)"></textarea>
+              <button type="button" style="padding:10px 16px;border-radius:8px;border:0;background:var(--accent);color:white;font-weight:700">Send</button>
+            </form>
+          </div>
+        </section>
+
+       
+      </main>
+
+    </div>
+  </div>
+
+  <script>
+   
+    (function(){
+      const content = document.getElementById('content');
+      const viewport = document.getElementById('viewport');
+
+      
+      function getScrollHeight(){
+        return content.offsetHeight - window.innerHeight;
+      }
+
+     
+      let target = 0;  
+      let current = 0;  
+      let isScrolling = false;
+      let lastFrameTime = performance.now();
+      let pointerActive = false;
+      let pointerStartY = 0;
+      let pointerStartTarget = 0;
+
+      
+      const ease = 0.08;        
+      const momentum = 0.95;   
+      let wheelVelocity = 0;    
+
+      
+      function render(){
+      
+        const desired = target + wheelVelocity;
+        current += (desired - current) * ease;
+
+       
+        if (Math.abs(desired - current) < 0.01) current = desired;
+
+       
+        const maxScroll = Math.max(0, getScrollHeight());
+        if (current < 0) current = 0;
+        if (current > maxScroll) current = maxScroll;
+
+        
+        content.style.transform = `translate3d(0,${-current}px,0)`;
+
+        
+        wheelVelocity *= momentum;
+
+        requestAnimationFrame(render);
+      }
+
+     
+      function onWheel(e){
+        
+        e.preventDefault();
+
+       
+        const delta = (e.deltaY || -e.wheelDelta || e.detail) * 1;
+
+        
+        wheelVelocity += delta * 0.8;
+
+        
+        target += delta;
+
+        clampTarget();
+      }
+
+      function clampTarget(){
+        const max = Math.max(0, getScrollHeight());
+        if (target < 0) target = 0;
+        if (target > max) target = max;
+      }
+
+     
+      function onPointerDown(e){
+        pointerActive = true;
+        pointerStartY = e.clientY || e.touches && e.touches[0].clientY;
+        pointerStartTarget = target;
+       
+        wheelVelocity = 0;
+      }
+      function onPointerMove(e){
+        if(!pointerActive) return;
+        const y = e.clientY || e.touches && e.touches[0].clientY;
+        const dy = y - pointerStartY; 
+        target = pointerStartTarget - dy;
+        clampTarget();
+      }
+      function onPointerUp(e){
+        pointerActive = false;
+      }
+
+     
+      function onAnchorClick(e){
+        const a = e.currentTarget;
+        const href = a.getAttribute('href');
+        if (!href || !href.startsWith('#')) return;
+        e.preventDefault();
+        const id = href.slice(1);
+        const el = document.getElementById(id);
+        if (!el) return;
+
+       
+        const rect = el.getBoundingClientRect();
+        const docTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+        const elTop = rect.top + docTop;
+
+       
+        target = elTop;
+        clampTarget();
+
+        wheelVelocity = 0;
+      }
+
+      
+      function onKey(e){
+        const step = window.innerHeight * 0.8;
+        if (e.key === 'PageDown') { target += step; clampTarget(); }
+        if (e.key === 'PageUp') { target -= step; clampTarget(); }
+        if (e.key === ' '){ e.preventDefault(); target += step; clampTarget(); }
+        if (e.key === 'ArrowDown') { target += 80; clampTarget(); }
+        if (e.key === 'ArrowUp') { target -= 80; clampTarget(); }
+      }
+
+      
+      let resizeTimeout = null;
+      function onResize(){
+       
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(()=>{
+          clampTarget();
+        },120);
+      }
+
+      
+      function init(){
+      
+        window.addEventListener('wheel', onWheel, {passive:false});
+        window.addEventListener('touchstart', onPointerDown, {passive:true});
+        window.addEventListener('touchmove', onPointerMove, {passive:false});
+        window.addEventListener('touchend', onPointerUp, {passive:true});
+        window.addEventListener('mousedown', onPointerDown, {passive:true});
+        window.addEventListener('mousemove', onPointerMove, {passive:true});
+        window.addEventListener('mouseup', onPointerUp, {passive:true});
+        window.addEventListener('keydown', onKey);
+        window.addEventListener('resize', onResize);
+
+     
+        document.querySelectorAll('a[data-anchor]').forEach(a=>a.addEventListener('click', onAnchorClick));
+
+       
+        requestAnimationFrame(render);
+
+        
+        window.__smoothScroll = {
+          get target(){return target},
+          set target(v){target = v; clampTarget()},
+          get current(){return current},
+          set ease(v){ /* no-op */ },
+          setMomentum(m){ /* no-op */ }
+        };
+      }
+
+     
+      if (document.readyState === 'complete' || document.readyState === 'interactive') init();
+      else document.addEventListener('DOMContentLoaded', init);
+
+      
+    })();
+  </script>
+</body>
+</html>

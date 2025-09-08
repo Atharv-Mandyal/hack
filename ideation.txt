@@ -1,0 +1,36 @@
+ideation : (keep redesigning as per features add on)
+TARGET AUDIENCE: 
+
+1. career options only after 10th grade(precise communication with the user on guiding him to pick which courses
+and which won't make much of an impact to his/her life, identifying user's interests)
+
+
+app?/website?
+
+phases of prompting: 
+- creation of extensive database.
+- (every phase would use genAI model.)
+
+
+1. know your customer
+2. detail analysis through tests etc
+3. recommendations(detailed)
+
+
+
+detailed phases :
+1. basic student information
+2. know his/her abilities through tests
+    A. aptitude tests
+    B. logical reasoning tests
+    C. interest identification tests
+    D. personality tests
+    E. Values and motivation tests
+3. career mapping and guidance 
+  - giving the user different career advice based on the data the user enters and integrating the chat with
+  our own database.
+  - recommending study plans : whether you want to pursue a career abroad or you want new paths to follow
+  - career stage detection + smart connector : 
+    instantly matches individuals with the right institutions
+  - exposure to real life jobs(providing mini internships or mini projects)
+
