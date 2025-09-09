@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tick the Correct Option — Interactive Quiz</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa6b2;
+      --accent:#60a5fa; --ok:#16a34a; --err:#ef4444; --glass: rgba(255,255,255,0.03);
+      --radius:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg,#071029 0%, #051424 100%);
+      color:#e6eef6; display:flex; align-items:center; justify-content:center; padding:32px;
+    }
+
+    .container{
+      width:100%; max-width:900px; border-radius:var(--radius); padding:24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+      backdrop-filter: blur(6px);
+    }
+
+    header{display:flex; align-items:center; gap:16px; margin-bottom:14px}
+    header h1{font-size:20px; margin:0}
+    header p{margin:0; color:var(--muted); font-size:13px}
+
+    .controls{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap}
+    button{
+      background:var(--glass); border:1px solid rgba(255,255,255,0.05); color:inherit;
+      padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600;
+    }
+    button.primary{background:linear-gradient(90deg,var(--accent),#3b82f6); color:white; border:none}
+    button.ghost{background:transparent; border:1px dashed rgba(255,255,255,0.04)}
+    button.danger{background:linear-gradient(90deg,#fb7185,#f43f5e); border:none}
+    .score{margin-left:auto; font-weight:700; color:var(--muted)}
+    .question{background:rgba(255,255,255,0.02); padding:14px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.02);}
+    .qtop{display:flex; gap:8px; align-items:center}
+    .qnum{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700}
+    .qtext{font-weight:700;}
+    .opts{display:flex; flex-direction:column; gap:8px; margin-top:12px}
+    .opt{
+      display:flex; gap:12px; align-items:center; padding:10px; border-radius:10px; cursor:pointer;
+      border:1px solid rgba(255,255,255,0.03);
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    }
+    .opt input{accent-color:var(--accent)}
+    .opt label{flex:1; cursor:pointer}
+    .opt.correct{border-color:rgba(16,185,129,0.15); background:linear-gradient(90deg, rgba(16,185,129,0.06), transparent)}
+    .opt.incorrect{border-color:rgba(239,68,68,0.12); background:linear-gradient(90deg, rgba(239,68,68,0.03), transparent)}
+    .hint{font-size:13px; color:var(--muted); margin-top:8px}
+    .resultBadge{padding:6px 10px;border-radius:999px;font-weight:700;font-size:13px}
+    .resultBadge.ok{background:rgba(16,185,129,0.12); color:var(--ok)}
+    .resultBadge.bad{background:rgba(239,68,68,0.06); color:var(--err)}
+    footer{display:flex; align-items:center; gap:8px; margin-top:14px; flex-wrap:wrap}
+
+    /* small screens */
+    @media (max-width:520px){
+      header{flex-direction:column; align-items:flex-start}
+      .score{margin-left:0}
+    }
+
+    /* subtle focus styles */
+    .opt:focus-within{outline:2px solid rgba(96,165,250,0.12); box-shadow:0 6px 18px rgba(3,7,18,0.6)}
+    .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+  </style>
+</head>
+<body>
+  <section class="container" style="margin-bottom:20px;text-align:center">
+   <video id="camInput" width="480" height="360" autoplay></video>
+  <canvas id="outputCanvas" width="480" height="360"></canvas>
+  </section>
+
+  <!-- Load OpenCV.js -->
+  <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady();"></script>
+
+  <script>
+    let video = document.getElementById("camInput");
+    let streaming = false;
+
+    // Start webcam
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then(function(stream) {
+        video.srcObject = stream;
+        video.play();
+        streaming = true;
+      })
+      .catch(function(err) {
+        console.log("An error occurred: " + err);
+      });
+
+    function onOpenCvReady() {
+      console.log("OpenCV.js is ready!");
+
+      // Load face cascade
+      let faceCascade = new cv.CascadeClassifier();
+      
+      let utils = new Utils('errorMessage');
+      utils.createFileFromUrl('haarcascade_frontalface_default.xml',
+        'https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml',
+        () => {
+          faceCascade.load('haarcascade_frontalface_default.xml');
+          detectFaces(faceCascade);
+        }
+      );
+    }
+
+    function detectFaces(faceCascade) {
+      let cap = new cv.VideoCapture(video);
+      let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+      let gray = new cv.Mat();
+      let faces = new cv.RectVector();
+      let size = new cv.Size(0, 0);
+
+      function processVideo() {
+        if (!streaming) {
+          // clean up
+          frame.delete(); gray.delete(); faces.delete();
+          return;
+        }
+
+        cap.read(frame);
+        cv.cvtColor(frame, gray, cv.COLOR_RGBA2GRAY);
+
+        // Detect faces
+        faceCascade.detectMultiScale(gray, faces, 1.1, 3, 0, size, size);
+
+        // Draw detections
+        for (let i = 0; i < faces.size(); i++) {
+          let face = faces.get(i);
+          let point1 = new cv.Point(face.x, face.y);
+          let point2 = new cv.Point(face.x + face.width, face.y + face.height);
+          cv.rectangle(frame, point1, point2, [255, 0, 0, 255], 2);
+        }
+
+        cv.imshow('outputCanvas', frame);
+
+        requestAnimationFrame(processVideo);
+      }
+
+      requestAnimationFrame(processVideo);
+    }
+
+    // Utility class to load cascade file
+    class Utils {
+      constructor(errorOutputId) {
+        this.errorOutput = document.getElementById(errorOutputId) || console;
+      }
+
+      createFileFromUrl(path, url, callback) {
+        let request = new XMLHttpRequest();
+        request.open('GET', url, true);
+        request.responseType = 'arraybuffer';
+        request.onload = () => {
+          if (request.status === 200) {
+            let data = new Uint8Array(request.response);
+            cv.FS_createDataFile('/', path, data, true, false, false);
+            callback();
+          } else {
+            this.printError('Failed to load ' + url + ' status: ' + request.status);
+          }
+        };
+        request.send();
+      }
+
+      printError(err) {
+        if (this.errorOutput) {
+          this.errorOutput.innerHTML = err;
+        } else {
+          console.error(err);
+        }
+      }
+    }
+  </script>
+
+  <main class="container" id="quizApp" aria-live="polite">
+    <header>
+      <div>
+        <h1>Tick the correct option</h1>
+        <p>Select the right answer(s). Click "Check" for instant feedback or "Submit" to finish.</p>
+      </div>
+      <div class="score" id="scoreDisplay">Score: 0 / 5</div>
+    </header>
+
+    <div class="controls" role="toolbar" aria-label="Quiz controls">
+      <button class="primary" id="submitBtn">Submit</button>
+      <button id="checkAllBtn">Check (instant)</button>
+      <button id="showAnswersBtn" class="ghost">Show Answers</button>
+      <button id="resetBtn" class="danger">Reset</button>
+    </div>
+
+    <form id="quizForm" autocomplete="off" novalidate>
+      <!-- QUESTIONS: change these objects in JS if you want to customize -->
+      <!-- Questions rendered from JS -->
+    </form>
+
+    <footer>
+      <div id="feedbackStrip" class="hint" aria-live="polite"></div>
+      <div style="margin-left:auto;color:var(--muted);font-size:13px">Keyboard: Tab to focus, Space/Enter to pick an option</div>
+    </footer>
+  </main>
+
+  <script>
+    // ====== Quiz data (edit here) ======
+    // type: "single" or "multiple" (multiple allows multiple correct)
+    const QUESTIONS = [
+      {
+        id: 1,
+        q: "Which of the following is your go to city?",
+        type: "single",
+        opts: ["Paris", "London", "Berlin", "Rome"],
+        correct: [0]
+      },
+      {
+        id: 2,
+        q: "Select your mood",
+        type: "multiple",
+        opts: ["Happy", "Sad", "Angry", "Relived"],
+        correct: [1,2]
+      },
+      {
+        id: 3,
+        q: "Which HTML element is used for the largest heading?",
+        type: "single",
+        opts: ["<h1>", "<head>", "<heading>", "<h6>"],
+        correct: [0],
+        explanation: "<h1> is the top-level heading element."
+      },
+      {
+        id: 4,
+        q: "Which flower is you come to home flower",
+        type: "single",
+        opts: ["Lillies", "Sunglowers", "Rose", "Marigold"],
+        correct: [2],
+        explanation: "Lillies are associated with purity, Sunflowers are associated with happiness, Roses are associated with love, marigold are associated with religious"
+      },
+      {
+        id: 5,
+        q: "Which color soothes you?",
+        type: "multiple",
+        opts: ["Red", "Blue", "Yellow", "Green"],
+        correct: [0,2],
+        explanation: "Red represents anger, blue represents open mindedness, yellow represents depression, green represents deep thinking)."
+      }
+    ];
+    // ====================================
+
+    const form = document.getElementById('quizForm');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const feedbackStrip = document.getElementById('feedbackStrip');
+    let userAnswers = {}; // id -> array of chosen indexes
+    let checked = {}; // id -> whether checked/graded
+
+    // Render questions
+    function renderQuestions(){
+      form.innerHTML = '';
+      QUESTIONS.forEach((qObj, idx) => {
+        const qDiv = document.createElement('section');
+        qDiv.className = 'question';
+        qDiv.id = 'q-'+qObj.id;
+        qDiv.setAttribute('data-qid', qObj.id);
+        qDiv.setAttribute('aria-labelledby', `q-${qObj.id}-label`);
+
+        // top row
+        const top = document.createElement('div');
+        top.className = 'qtop';
+        const qnum = document.createElement('div');
+        qnum.className = 'qnum';
+        qnum.textContent = (idx+1);
+        const qtext = document.createElement('div');
+        qtext.className = 'qtext';
+        qtext.id = `q-${qObj.id}-label`;
+        qtext.innerHTML = qObj.q;
+        top.appendChild(qnum);
+        top.appendChild(qtext);
+        qDiv.appendChild(top);
+
+        // options container
+        const opts = document.createElement('div');
+        opts.className = 'opts';
+        opts.role = 'list';
+        opts.setAttribute('aria-label', 'Options');
+
+        qObj.opts.forEach((optText, i) => {
+          const opt = document.createElement('div');
+          opt.className = 'opt';
+          opt.tabIndex = -1;
+
+          const input = document.createElement('input');
+          input.type = qObj.type === 'multiple' ? 'checkbox' : 'radio';
+          input.name = 'q_'+qObj.id;
+          input.id = `q${qObj.id}_opt${i}`;
+          input.value = i;
+          input.dataset.qid = qObj.id;
+          input.dataset.optIndex = i;
+          input.addEventListener('change', onSelect);
+
+          const lbl = document.createElement('label');
+          lbl.htmlFor = input.id;
+          lbl.innerHTML = optText;
+
+          opt.appendChild(input);
+          opt.appendChild(lbl);
+
+          opts.appendChild(opt);
+        });
+
+        // hint/ explanation placeholder
+        const hint = document.createElement('div');
+        hint.className = 'hint';
+        hint.id = `hint-${qObj.id}`;
+        hint.textContent = ''; // filled on check/submit
+
+        qDiv.appendChild(opts);
+        qDiv.appendChild(hint);
+        form.appendChild(qDiv);
+
+        // keyboard accessibility: when pressing Enter/Space on the opt container, toggle the input
+        opts.querySelectorAll('.opt').forEach(optEl => {
+          optEl.addEventListener('keydown', (e) => {
+            if(e.key === ' ' || e.key === 'Enter'){
+              e.preventDefault();
+              const input = optEl.querySelector('input');
+              input.click();
+              input.focus();
+            }
+          });
+          // clicking the row toggles the radio/checkbox
+          optEl.addEventListener('click', (e) => {
+            if(e.target.tagName.toLowerCase() === 'input') return;
+            const input = optEl.querySelector('input');
+            input.click();
+            input.focus();
+          });
+        });
+      });
+    }
+
+    function onSelect(e){
+      const qid = Number(e.target.dataset.qid);
+      const idx = Number(e.target.dataset.optIndex);
+      const qObj = QUESTIONS.find(q => q.id === qid);
+
+      if (!userAnswers[qid]) userAnswers[qid] = [];
+
+      if (qObj.type === 'single'){
+        userAnswers[qid] = [idx];
+      } else {
+        // toggle in array
+        const arr = new Set(userAnswers[qid]);
+        if (e.target.checked) arr.add(idx); else arr.delete(idx);
+        userAnswers[qid] = Array.from(arr).sort((a,b)=>a-b);
+      }
+
+      // if this question was previously checked, uncheck visual state so user can reattempt before final submit
+      if(checked[qid]) {
+        checked[qid] = false;
+        clearVisualState(qid);
+        document.getElementById(`hint-${qid}`).textContent = '';
+      }
+    }
+
+    function clearVisualState(qid){
+      const qDiv = document.getElementById('q-'+qid);
+      qDiv.querySelectorAll('.opt').forEach((optEl, i) => {
+        optEl.classList.remove('correct','incorrect');
+      });
+    }
+
+    // Check a single question (instant check)
+    function checkQuestion(qid){
+      const qObj = QUESTIONS.find(q => q.id === qid);
+      const chosen = userAnswers[qid] || [];
+      const correct = qObj.correct.slice().sort((a,b)=>a-b);
+
+      // compare arrays (order-insensitive)
+      const isCorrect = chosen.length === correct.length && chosen.every((v,i)=>v === correct[i] || correct.includes(v));
+      // apply visuals
+      const qDiv = document.getElementById('q-'+qid);
+      qDiv.querySelectorAll('.opt').forEach((optEl, i) => {
+        optEl.classList.remove('correct','incorrect');
+        if (correct.includes(i)) {
+          optEl.classList.add('correct');
+        }
+        if (chosen.includes(i) && !correct.includes(i)) {
+          optEl.classList.add('incorrect');
+        }
+      });
+
+      // show explanation
+      const hint = document.getElementById(`hint-${qid}`);
+      hint.textContent = qObj.explanation || (isCorrect ? 'Correct.' : 'Incorrect.');
+
+      checked[qid] = true;
+      return isCorrect;
+    }
+
+    // Check all questions (instant or on submit)
+    function checkAll(finalSubmit=false){
+      let score=0;
+      QUESTIONS.forEach(q => {
+        const ok = checkQuestion(q.id);
+        if (ok) score++;
+      });
+      updateScore(score);
+      feedbackStrip.textContent = finalSubmit ? `You scored ${score} out of ${QUESTIONS.length}.` : `Checked: ${score} / ${QUESTIONS.length} correct so far.`;
+      // if final submit, disable inputs to lock answers
+      if(finalSubmit){
+        lockAll();
+      }
+      return score;
+    }
+
+    function updateScore(score){
+      scoreDisplay.textContent = `Score: ${score} / ${QUESTIONS.length}`;
+    }
+
+    function lockAll(){
+      form.querySelectorAll('input').forEach(inp => inp.disabled = true);
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('checkAllBtn').disabled = true;
+    }
+
+    function showAnswers(){
+      QUESTIONS.forEach(q => {
+        const qDiv = document.getElementById('q-'+q.id);
+        qDiv.querySelectorAll('.opt').forEach((optEl, i) => {
+          optEl.classList.remove('incorrect');
+          if (q.correct.includes(i)) optEl.classList.add('correct');
+        });
+        document.getElementById(`hint-${q.id}`).textContent = q.explanation || '';
+        checked[q.id] = true;
+      });
+      feedbackStrip.textContent = 'Answers revealed.';
+    }
+
+    function resetQuiz(){
+      userAnswers = {};
+      checked = {};
+      form.querySelectorAll('input').forEach(inp => {
+        inp.disabled = false;
+        inp.checked = false;
+      });
+      form.querySelectorAll('.opt').forEach(opt => {
+         opt.classList.remove('correct','incorrect');
+      });
+      form.querySelectorAll('.hint').forEach(h => h.textContent = '');
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('checkAllBtn').disabled = false;
+      updateScore(0);
+      feedbackStrip.textContent = 'Quiz reset. You can try again.';
+    }
+
+    // init
+    renderQuestions();
+    updateScore(0);
+
+    // bind controls
+    document.getElementById('checkAllBtn').addEventListener('click', () => {
+      checkAll(false);
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      const score = checkAll(true);
+      feedbackStrip.textContent = `Final score: ${score} / ${QUESTIONS.length}. ${score === QUESTIONS.length ? 'Perfect!' : ''}`;
+    });
+
+    document.getElementById('showAnswersBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      showAnswers();
+      // also update score visually to full (since answers shown)
+      updateScore(QUESTIONS.length);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      resetQuiz();
+      localStorage.removeItem('quizState_v1')
+    });
+
+    // Keyboard-friendly focus: allow arrow keys to move between options inside a question
+    document.addEventListener('keydown', (e) => {
+      const focused = document.activeElement;
+      if(!focused) return;
+      if(focused.closest && focused.closest('.opts')){
+        if(e.key === 'ArrowDown' || e.key === 'ArrowRight'){
+          e.preventDefault();
+          let next = focused.nextElementSibling;
+          if(!next) next = focused.parentElement.firstElementChild;
+          next.querySelector('input').focus();
+        } else if(e.key === 'ArrowUp' || e.key === 'ArrowLeft'){
+          e.preventDefault();
+          let prev = focused.previousElementSibling;
+          if(!prev) prev = focused.parentElement.lastElementChild;
+          prev.querySelector('input').focus();
+        }
+      }
+    });
+
+    // small enhancement: save answers to localStorage so progress isn't lost accidentally
+    // (simple serialization)
+    window.addEventListener('beforeunload', () => {
+      try {
+        const state = {userAnswers, checked};
+        localStorage.setItem('quizState_v1', JSON.stringify(state));
+      } catch(e){}
+    });
+
+    // restore if present
+    (function restoreState(){
+      try{
+        const raw = localStorage.getItem('quizState_v1');
+        if(!raw) return;
+        const state = JSON.parse(raw);
+        if(!state) return;
+        userAnswers = state.userAnswers || {};
+        checked = state.checked || {};
+        // apply selections
+        Object.keys(userAnswers).forEach(k => {
+          const qid = Number(k);
+          (userAnswers[qid]||[]).forEach(idx => {
+            const inp = document.getElementById(`q${qid}_opt${idx}`);
+            if(inp) inp.checked = true;
+          });
+        });
+        // if some were checked, show their visuals
+        Object.keys(checked).forEach(k => {
+          if(checked[k]) checkQuestion(Number(k));
+        });
+        // update score
+        let score = 0;
+        QUESTIONS.forEach(q => {
+          if (checked[q.id]) {
+            const ok = checkQuestion(q.id);
+            if (ok) score++;
+          }
+        });
+        updateScore(score);
+      }catch(e){}
+    })();
+
+  </script>
+</body>
+</html>
