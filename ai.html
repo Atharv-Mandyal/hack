@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Prompt Box Demo</title>
+  <style>
+    :root{
+      --bg: #0f1724;
+      --card: #0b1220;
+      --muted: #9aa4b2;
+      --accent: #7c5cff;
+      --glass: rgba(255,255,255,0.03);
+      --radius: 14px;
+    }
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg,#071029 0%, #071526 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: #e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding: 24px;
+    }
+
+    .chat-wrap{
+      width: 760px;
+      max-width: calc(100% - 48px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+      padding: 20px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .messages {
+      height: 360px;
+      overflow:auto;
+      padding: 12px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      border: 1px solid rgba(255,255,255,0.03);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .msg {
+      max-width: 80%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      line-height: 1.35;
+    }
+    .msg.user { 
+      align-self: flex-end;
+      background: linear-gradient(90deg, rgba(124,92,255,0.12), rgba(124,92,255,0.08));
+      border: 1px solid rgba(124,92,255,0.18);
+      color: #eaf0ff;
+    }
+    .msg.ai {
+      align-self:flex-start;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.03);
+      color: var(--muted);
+    }
+
+    .prompt-bar{
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      background: transparent;
+    }
+
+    .suggestions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      padding:4px 0;
+    }
+    .chip{
+      padding:6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.02);
+      color: var(--muted);
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip:hover{ transform:translateY(-2px); }
+
+    .input-area{
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      width:100%;
+    }
+
+    textarea{
+      resize: none;
+      min-height: 44px;
+      max-height: 180px;
+      overflow:auto;
+      width:100%;
+      padding: 12px 14px;
+      outline:none;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.04);
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      color: #e6eef8;
+      font-size: 15px;
+      line-height:1.4;
+      box-shadow: inset 0 -1px 0 rgba(255,255,255,0.01);
+    }
+
+    .controls{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:center;
+    }
+
+    .btn {
+      background: linear-gradient(180deg,var(--accent), #5a3cff);
+      border:none;
+      color:white;
+      padding:10px 14px;
+      border-radius: 10px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: 0 6px 18px rgba(124,92,255,0.18);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .mini {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.03);
+      padding:8px;
+      border-radius:10px;
+      color:var(--muted);
+      cursor:pointer;
+    }
+    .meta {
+      font-size:12px;
+      color:var(--muted);
+      text-align:right;
+    }
+
+    .hint { font-size:13px; color:var(--muted); margin-top:6px; }
+  </style>
+</head>
+<body>
+  <main class="chat-wrap" aria-label="AI chat demo">
+    <div class="messages" id="messages" role="log" aria-live="polite"></div>
+
+    <div class="suggestions" id="suggestions" aria-hidden="false">
+      <button class="chip">Summarize this text</button>
+      <button class="chip">Write a friendly reply</button>
+      <button class="chip">Explain like I'm 5</button>
+      <button class="chip">Generate a 3-step plan</button>
+    </div>
+
+    <div class="prompt-bar">
+      <div class="input-area" style="flex:1">
+        <textarea id="prompt" aria-label="Type your message" placeholder="Ask me anything — press Enter to send, Shift+Enter for newline"></textarea>
+      </div>
+
+      <div class="controls" style="width:122px">
+        <button id="historyBtn" class="mini" title="Open history">History</button>
+        <button id="sendBtn" class="btn" title="Send (Enter)">
+          Send
+        </button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="meta">AI Prompt Box demo</div>
+      <div class="hint">Tip: Press Up arrow in the empty prompt to recall last message.</div>
+    </div>
+  </main>
+
+  <script>
+    // Simple AI prompt box interactions
+    const promptEl = document.getElementById('prompt');
+    const sendBtn = document.getElementById('sendBtn');
+    const messagesEl = document.getElementById('messages');
+    const suggestionsEl = document.getElementById('suggestions');
+    const historyBtn = document.getElementById('historyBtn');
+
+    // localStorage key
+    const STORAGE_KEY = 'ai_prompt_history_v1';
+    let history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let historyIndex = history.length; // for up-arrow recall
+
+    function saveToHistory(text) {
+      if (!text.trim()) return;
+      history.push({ text, ts: Date.now() });
+      // keep last 50
+      history = history.slice(-50);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+      historyIndex = history.length;
+    }
+
+    // Auto-resize textarea
+    function autoResize(t) {
+      t.style.height = 'auto';
+      t.style.height = (t.scrollHeight) + 'px';
+    }
+    promptEl.addEventListener('input', (e) => autoResize(e.target));
+
+    // Enter to send, Shift+Enter for newline
+    promptEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      } else if (e.key === 'ArrowUp' && promptEl.value.trim() === '') {
+        // recall last
+        if (history.length) {
+          historyIndex = Math.max(0, historyIndex - 1);
+          promptEl.value = history[historyIndex]?.text || '';
+          autoResize(promptEl);
+          setTimeout(()=>promptEl.setSelectionRange(promptEl.value.length, promptEl.value.length), 0);
+        }
+        e.preventDefault();
+      } else if (e.key === 'ArrowDown' && promptEl.value.trim() === '') {
+        // forward in history
+        if (history.length) {
+          historyIndex = Math.min(history.length, historyIndex + 1);
+          promptEl.value = historyIndex < history.length ? (history[historyIndex]?.text || '') : '';
+          autoResize(promptEl);
+        }
+        e.preventDefault();
+      }
+    });
+
+    // Send function (demo: echoes user query and fake AI reply)
+    function handleSend() {
+      const text = promptEl.value.trim();
+      if (!text) return;
+      appendMessage('user', text);
+      saveToHistory(text);
+      promptEl.value = '';
+      autoResize(promptEl);
+      promptEl.focus();
+
+      // Simulate AI response (replace with real API call as needed)
+      appendMessage('ai', '✳️ Thinking...');
+
+      // Fake delay and then replace the 'thinking' with a generated reply
+      setTimeout(() => {
+        // find last ai placeholder and replace
+        const aiMsgs = messagesEl.querySelectorAll('.msg.ai');
+        const lastAi = aiMsgs[aiMsgs.length - 1];
+        if (lastAi) {
+          lastAi.textContent = generateFakeReply(text);
+        }
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }, 600 + Math.random() * 900);
+    }
+
+    // Append messages to the message area
+    function appendMessage(who, text) {
+      const el = document.createElement('div');
+      el.className = 'msg ' + who;
+      el.textContent = text;
+      messagesEl.appendChild(el);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Fake reply generator (placeholder)
+    function generateFakeReply(userText) {
+      // For real use: call your AI endpoint here and update the UI with streaming or final content.
+      return "AI reply (demo): I heard — \"" + (userText.length > 140 ? userText.slice(0,137) + '...' : userText) + "\". Try replacing this with an actual API call.";
+    }
+
+    // wire up send button
+    sendBtn.addEventListener('click', handleSend);
+
+    // suggestions chips behavior
+    suggestionsEl.addEventListener('click', (e) => {
+      if (e.target.classList.contains('chip')) {
+        const s = e.target.textContent;
+        // insert into prompt or send immediately
+        promptEl.value = s;
+        autoResize(promptEl);
+        promptEl.focus();
+      }
+    });
+
+    // simple history modal (alert for demo)
+    historyBtn.addEventListener('click', () => {
+      if (!history.length) {
+        alert('No history yet.');
+        return;
+      }
+      const list = history.slice().reverse().map((h, i) => `${i+1}. ${new Date(h.ts).toLocaleString()}: ${h.text}`).join('\n\n');
+      // For production, create a nicer modal. This is a quick demo.
+      const pick = prompt('History (most recent first):\n\n' + list + '\n\nEnter the number to recall or Cancel.', '');
+      if (pick) {
+        const idx = parseInt(pick,10);
+        if (!Number.isNaN(idx) && idx >= 1 && idx <= history.length) {
+          const item = history[history.length - idx];
+          promptEl.value = item.text;
+          autoResize(promptEl);
+          promptEl.focus();
+        }
+      }
+    });
+
+    // Load existing history into a small preview (optional)
+    function init() {
+      // optionally show a welcome message
+      appendMessage('ai', 'Welcome! This is an AI prompt box demo. Type a prompt and press Enter to send.');
+      // ensure textarea sizing
+      autoResize(promptEl);
+    }
+    init();
+  </script>
+</body>
+</html>

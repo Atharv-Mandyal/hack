@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Available Applications — Register</title>
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+  <style>
+    :root{
+      --bg:#f4f6fb; --card:#ffffff; --accent:#4A90E2; --muted:#6b7280;
+    }
+    a {
+      text-decoration: none;  /* removes underline */
+      color: #000;           /* set link color */
+     
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, system-ui, Arial, sans-serif;background:var(--bg);color:#111}
+
+    header{display:flex;align-items:center;gap:16px;padding:20px 24px;background:linear-gradient(90deg,#fff, #f8fbff);box-shadow:0 1px 0 rgba(0,0,0,0.04);position:sticky;top:0;z-index:10}
+    header h1{font-size:18px;margin:0}
+    .controls{margin-left:auto;display:flex;gap:10px;align-items:center}
+
+    .search {
+      display:flex;align-items:center;background:#fff;border-radius:999px;padding:6px 10px;box-shadow:0 1px 4px rgba(16,24,40,0.06);width:320px;max-width:55vw
+    }
+    .search input{border:0;outline:0;padding:8px 10px;font-size:14px;flex:1}
+    .chip-row{display:flex;gap:8px;padding:12px 24px;overflow-x:auto}
+    .chip{background:#fff;padding:8px 12px;border-radius:999px;cursor:pointer;border:1px solid rgba(0,0,0,0.04);font-size:13px}
+    .chip.active{background:var(--accent);color:#fff;border-color:transparent}
+
+    .container{display:flex;padding:16px 24px;height:calc(100vh - 112px);gap:20px}
+    .sidebar{width:260px;min-width:200px}
+    .sidebar .panel{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 20px rgba(16,24,40,0.06)}
+    .sidebar h3{margin:0 0 8px 0;font-size:14px}
+    .filters label{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px}
+
+    .main{flex:1;display:flex;flex-direction:column}
+    .grid-wrap{flex:1;overflow:auto;padding-right:8px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:8px}
+
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(16,24,40,0.06);display:flex;flex-direction:column;gap:12px}
+    .meta{display:flex;gap:12px;align-items:center}
+    .icon{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,#e6f0ff,#d2e7ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent)}
+    .title{font-weight:600}
+    .desc{color:var(--muted);font-size:13px}
+    .tags{display:flex;gap:8px;flex-wrap:wrap}
+    .tag{background:#f3f6fb;padding:6px 8px;border-radius:8px;font-size:12px;color:var(--muted)}
+    .actions{display:flex;gap:8px;margin-top:auto}
+    .btn{border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .btn.secondary{background:#f3f4f6}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+    .empty{padding:40px;text-align:center;color:var(--muted)}
+
+    footer{padding:12px 24px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* small screens */
+    @media (max-width:880px){
+      .container{flex-direction:column;height:calc(100vh - 112px)}
+      .sidebar{width:100%;order:2}
+      .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+      .search{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><a href="dashboard.html">One Step Career and Edu advisor</a></h1>
+
+    <div class="controls">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M21 21l-4.35-4.35" stroke="#9AA4B2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <circle cx="11" cy="11" r="6" stroke="#9AA4B2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
+        </svg>
+        <input id="q" placeholder="Search applications (eg. Data Science, UX)" />
+        <button class="btn ghost" id="clearBtn">Clear</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="chip-row" id="chips">
+    <div class="chip active" data-filter="all">All</div>
+    <div class="chip" data-filter="study">Study</div>
+    <div class="chip" data-filter="job">Jobs</div>
+    <div class="chip" data-filter="test">Tests</div>
+    <div class="chip" data-filter="scholarship">Scholarships</div>
+  </div>
+
+  <div class="container">
+    <aside class="sidebar">
+      <div class="panel">
+        <h3>Filters</h3>
+        <div class="filters">
+          <label><input type="checkbox" value="free" checked /> Free</label>
+          <label><input type="checkbox" value="paid" /> Paid</label>
+          <label><input type="checkbox" value="online" checked /> Online</label>
+          <label><input type="checkbox" value="offline" /> Offline</label>
+        </div>
+        <hr style="margin:12px 0;border:none;border-top:1px solid #f1f3f7" />
+        <button class="btn primary" id="registerAll">Register all visible</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="grid-wrap" data-aos="fade-right">
+        <div class="grid" id="grid">
+          <!-- cards will be injected here -->
+        </div>
+        <div class="empty" id="empty" style="display:none">No applications match your search.</div>
+      </div>
+      <footer>Scroll the list to browse available applications. Click Register to sign up.</footer>
+    </main>
+  </div>
+
+  <script>
+    const apps = [
+      {id:1,title:'Data Science Bootcamp',desc:'12-week intensive program covering Python, ML and SQL.',tags:['study','paid','online']},
+      {id:2,title:'UI/UX Design Course',desc:'Learn fundamentals of interaction & visual design.',tags:['study','free','online']},
+      {id:3,title:'Frontend Developer Job Fair',desc:'Apply to curated frontend roles from startups.',tags:['job','free','offline']},
+      {id:4,title:'Aptitude Test',desc:'Take the placement aptitude test to qualify for jobs.',tags:['test','free','online']},
+      {id:5,title:'Scholarship 2025',desc:'Apply for merit-based scholarship for undergraduates.',tags:['scholarship','free','online']},
+      {id:6,title:'Cloud Architect Program',desc:'Advanced program on cloud design & infra.',tags:['study','paid','online']},
+      {id:7,title:'Internship Batch',desc:'Summer internships for engineering students.',tags:['job','free','online']},
+      {id:8,title:'Career Counselling Session',desc:'1:1 counselling to plan your career path.',tags:['study','paid','offline']},
+      {id:9,title:'Resume Review',desc:'Get your resume reviewed by experts.',tags:['service','free','online']}
+    ];
+
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+
+    function render(list){
+      grid.innerHTML = '';
+      if(!list.length){ empty.style.display='block'; return } else { empty.style.display='none' }
+
+      list.forEach(app=>{
+        const div = document.createElement('div'); div.className='card';
+        div.innerHTML = `
+          <div class="meta">
+            <div class="icon">${app.title.split(' ').slice(0,2).map(w=>w[0]).join('')}</div>
+            <div style="flex:1">
+              <div class="title">${app.title}</div>
+              <div class="desc">${app.desc}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="desc" style="font-size:12px">${app.tags.join(', ')}</div>
+            </div>
+          </div>
+          <div class="tags">${app.tags.slice(0,3).map(t=>`<div class="tag">${t}</div>`).join('')}</div>
+          <div class="actions">
+            <button class="btn secondary" onclick="viewDetails(${app.id})">Details</button>
+            <button class="btn primary" onclick="toggleRegister(event, ${app.id})" id="btn-${app.id}">Register</button>
+          </div>
+        `;
+        grid.appendChild(div);
+      })
+    }
+
+    // initial render
+    render(apps);
+
+    function toggleRegister(e,id){
+      e.stopPropagation();
+      const btn = document.getElementById('btn-'+id);
+      if(btn.dataset.registered==='1'){
+        btn.dataset.registered='0'; btn.textContent='Register'; btn.classList.remove('secondary'); btn.classList.add('primary');
+      } else {
+        btn.dataset.registered='1'; btn.textContent='Registered'; btn.classList.remove('primary'); btn.classList.add('secondary');
+      }
+    }
+
+    function viewDetails(id){
+      const a = apps.find(x=>x.id===id);
+      alert(a.title + "\n\n" + a.desc + "\n\nTags: " + a.tags.join(', '));
+    }
+
+    // search + chips + filters
+    const q = document.getElementById('q');
+    const chips = Array.from(document.querySelectorAll('.chip'));
+    const clearBtn = document.getElementById('clearBtn');
+
+    function applyFilters(){
+      let list = [...apps];
+      const query = q.value.trim().toLowerCase();
+      const activeChip = chips.find(c=>c.classList.contains('active'))?.dataset.filter || 'all';
+
+      // text search
+      if(query){
+        list = list.filter(a=> (a.title + ' ' + a.desc + ' ' + a.tags.join(' ')).toLowerCase().includes(query));
+      }
+
+      // chip filter
+      if(activeChip && activeChip!=='all'){
+        list = list.filter(a=> a.tags.includes(activeChip));
+      }
+
+      // sidebar checkboxes
+      const checked = Array.from(document.querySelectorAll('.filters input:checked')).map(i=>i.value);
+      if(!checked.includes('paid') || !checked.includes('free')){
+        // if only one of paid/free checked, filter accordingly
+        if(checked.includes('free') && !checked.includes('paid')) list = list.filter(a=> a.tags.includes('free'));
+        if(checked.includes('paid') && !checked.includes('free')) list = list.filter(a=> a.tags.includes('paid'));
+      }
+
+      render(list);
+    }
+
+    q.addEventListener('input', applyFilters);
+    clearBtn.addEventListener('click', ()=>{q.value=''; applyFilters();});
+
+    chips.forEach(c=> c.addEventListener('click', ()=>{
+      chips.forEach(x=>x.classList.remove('active'));
+      c.classList.add('active');
+      applyFilters();
+    }));
+
+    // sidebar checkboxes
+    document.querySelectorAll('.filters input').forEach(inp=>inp.addEventListener('change', applyFilters));
+
+    // register all visible
+    document.getElementById('registerAll').addEventListener('click', ()=>{
+      // mark all visible register buttons as registered
+      document.querySelectorAll('#grid .card').forEach(card=>{
+        const btn = card.querySelector('.btn.primary, .btn.secondary');
+        if(btn && btn.textContent.trim()==='Register'){
+          btn.click();
+        }
+      });
+    });
+
+    // make grid scroll smoothly when using keyboard
+    document.querySelector('.grid-wrap').addEventListener('keydown', (e)=>{
+      if(e.key==='ArrowDown') document.querySelector('.grid-wrap').scrollBy({top:120,behavior:'smooth'});
+      if(e.key==='ArrowUp') document.querySelector('.grid-wrap').scrollBy({top:-120,behavior:'smooth'});
+    });
+
+  </script>
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 1000, 
+    once: true      
+  });
+</script>
+</body>
+</html>
