@@ -101,6 +101,11 @@
       align-items:flex-end;
       width:100%;
     }
+    a {
+      text-decoration: none;  /* removes underline */
+      color: #4A90E2;           /* set link color */
+     
+    }
 
     textarea{
       resize: none;
@@ -179,8 +184,9 @@
       <div class="controls" style="width:122px">
         <button id="historyBtn" class="mini" title="Open history">History</button>
         <button id="sendBtn" class="btn" title="Send (Enter)">
+          <a href="dashboard.html">
           Send
-        </button>
+          </a> </button>
       </div>
     </div>
 
@@ -277,11 +283,13 @@
       messagesEl.appendChild(el);
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
+    
 
     // Fake reply generator (placeholder)
     function generateFakeReply(userText) {
       // For real use: call your AI endpoint here and update the UI with streaming or final content.
-      return "AI reply (demo): I heard — \"" + (userText.length > 140 ? userText.slice(0,137) + '...' : userText) + "\". Try replacing this with an actual API call.";
+      return "Hello, Atharv Mandyal, I am your personal assistant to assist you with your career choices. You have shown a significant interest in Dinosaurs and biology which will make Paleontology your ideal career option. In India Paleontology options are quite less but I can still help you for finding colleges in India which give you paleontology degrees and show you your future opportunities in it. You other intererst  psychology, market of psychology is quite big and growing in India, there are many colleges that provide psychology degree. The top ones are Delhi University, Banaras Hindu university, Tata institute of social sciences etc. Football in India is not very dominant so opportunities there are very less. Please login to continue so that I can give you a Detailed explanation on all your interest and further opportunities.";
+     
     }
 
     // wire up send button
@@ -299,6 +307,23 @@
     });
 
     // simple history modal (alert for demo)
+    const loginBtn = document.createElement("button");
+    loginBtn.innerText = "Login";
+
+    // Style button (optional)
+    loginBtn.style.padding = "10px 20px";
+    loginBtn.style.fontSize = "16px";
+    loginBtn.style.borderRadius = "8px";
+    loginBtn.style.cursor = "pointer";
+    loginBtn.style.backgroundColor = "#4CAF50";
+    loginBtn.style.color = "white";
+    loginBtn.style.border = "none";
+
+    // Add click event
+    loginBtn.addEventListener("click", function () {
+      // Redirect to login page
+      window.location.href = "login.html"; // change this to your login page URL
+    });
     historyBtn.addEventListener('click', () => {
       if (!history.length) {
         alert('No history yet.');
@@ -322,6 +347,7 @@
     function init() {
       // optionally show a welcome message
       appendMessage('ai', 'Welcome! This is an AI prompt box demo. Type a prompt and press Enter to send.');
+      appendMessage('ai', 'Please enter your details so that I can assist you with your career')
       // ensure textarea sizing
       autoResize(promptEl);
     }
